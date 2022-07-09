@@ -1,5 +1,8 @@
-process.on('message', msg => {
-	if (msg == 'disconnect') return process.disconnect();
-	console.log(`Client has got: ${msg}`);
-	if (process.send) process.send('Pong!');
+import { IComputeInput } from './types.js';
+
+import { compute } from './factorial.js';
+
+process.on('message', (msg: IComputeInput) => {
+	if (process.send) process.send(compute(msg));
+	process.disconnect();
 });

@@ -1,40 +1,24 @@
-import { Worker } from 'worker_threads';
-import perf_hooks from 'perf_hooks';
+import { exec } from 'child_process';
+import { spawn } from 'child_process';
 
-const perfObserver = new perf_hooks.PerformanceObserver((items, observer) => {
-	console.log(items.getEntries());
-	observer.disconnect();
+const childProcess = spawn('node', ['dist/factorial']);
+
+childProcess.stdout.on('data', data => {
+	console.log(`Stdout: ${data}`);
 });
-perfObserver.observe({ type: 'measure' });
 
-function compute(arr: number[]): Promise<number[] | Error> {
-	return new Promise((resolve, reject) => {
-		const worker = new Worker('./dist/worker.js', {
-			workerData: { arr },
-		});
+childProcess.stderr.on('data', data => {
+	console.log(`Stderr: ${data}`);
+});
 
-		worker.on('message', msg => {
-			console.log(worker.threadId);
-			resolve(msg);
-		});
+childProcess.on('exit', code => console.log(`Code: ${code}`));
 
-		worker.on('error', err => {
-			reject(err);
-		});
+// const childProcess = exec('dir dist', (err, stdout, stderr) => {
+// 	if (err) console.error(err.message);
+// 	console.log(`std out: ${stdout}`);
+// 	console.log(`std error: ${stderr}`);
+// });
 
-		worker.on('exit', () => console.log('The end'));
-	});
-}
-
-async function main() {
-	performance.mark('main_start');
-
-	let arr: number[] = [];
-	for (let i = 0; i < 10000; i++) arr.push(i);
-	await compute(arr);
-
-	performance.mark('main_end');
-	performance.measure('main', 'main_start', 'main_end');
-}
-
-main();
+// childProcess.on('exit', code => {
+// 	console.log(`Exit code: ${code}`);
+// });
